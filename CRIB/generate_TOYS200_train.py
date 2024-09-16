@@ -2,8 +2,6 @@ import bpy
 import numpy as np
 import sys
 import os
-import pdb
-import argparse
 import copy
 import json
 

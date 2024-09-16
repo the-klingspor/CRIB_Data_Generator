@@ -43,11 +43,12 @@ classes = ['bag', 'baseball', 'binoculars', 'cactus', 'crystal', 'dozer',
            'monimop', 'mushroom', 'pokeball', 'reindeer', 'robot', 'santa', 
            'shopping_cart', 'sneaker', 'sonic', 'tank', 'unicorn', 'whistle', 'worm']
 
-data_generators = [data_generator(model_name = classes[i]) for i in range(len(classes))]
+
+data_generators = [data_generator(model_name = classes[i], class_idx=i) for i in range(len(classes))]
 
 for i in range(args.start, args.end):
     print("Generating data for {}, object [{}/{}]".format(classes[i], i+1, args.end-args.start))
-    
+
     for j in range(args.n):
         data_generators[i].get_training_data()
   

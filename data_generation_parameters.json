@@ -2,7 +2,7 @@
     "light_parameters": {
         "area_strength_range": [
             10,
-            150
+            20
         ],
         "point_light_locations": [
             [2.5, 2.5, 3],
@@ -11,8 +11,8 @@
             [-2.5, -2.5, 3]
         ],
         "point_strength_range": [
-            100,
-            800
+            20,
+            30
         ],
         "area_light_locations": [
             [0, -2.5, 3 ],
@@ -46,12 +46,13 @@
         "use_denoising": true,
         "render_tile_x": 100,
         "use_caustics_reflective": false,
-        "resolution": 200
+        "resolution": 224
     },
     "learning_exp_properties":{
         "total_points":3,
         "total_frames":30
     },
-    "blender_path":"/home/sstojanov3/blender-2.79-linux-glibc219-x86_64/blender",
+    "blender_path":"/home/akata/jstrueber72/blender/blender",
+    "background_old":"clutter",
     "background":"blank"
 }

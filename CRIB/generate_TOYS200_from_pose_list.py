@@ -2,11 +2,28 @@ import bpy
 import numpy as np
 import sys
 import os
-import pdb
 import json
 
+
 # ENABLE GPU'S FROM BLENDER PREFERENCES
-bpy.context.user_preferences.addons['cycles'].preferences['compute_device_type'] = 1
+#bpy.context.user_preferences.addons['cycles'].preferences['compute_device_type'] = 1
+
+# Ensure we're in the correct context
+prefs = bpy.context.preferences
+
+# Access the Cycles add-on preferences
+cycles_prefs = prefs.addons['cycles'].preferences
+
+# Set the compute device type
+# The value should be a string such as 'CUDA', 'OPENCL', or 'NONE'
+cycles_prefs.compute_device_type = 'CUDA'  # or 'OPENCL' or 'NONE'
+
+# Set the compute device
+# This is typically a string such as 'CUDA_0' for the first CUDA device
+cycles_prefs.get_devices()
+for device in cycles_prefs.devices:
+    if device.type == 'CUDA' and device.use is False:
+        device.use = True
 
 # blender doesn't see local paths, so we need to add the directory where the lamps module is 
 sys.path.append('CRIB')
@@ -27,7 +44,7 @@ def plus_minus(val, percent = 100):
     return val
 
 def generate():
-    ''' ========= argparse ========''' 
+    ''' ========= argparse ========'''
     try:
         mn_fr_idx = sys.argv.index("model_name") + 1
     except ValueError:
@@ -63,17 +80,18 @@ def generate():
     scn = bpy.context.scene
     toy_obj = bpy.data.objects[model_name]
     cam = bpy.data.objects['Camera']
+    bpy.context.scene.camera = cam
 
     #making sure correct object is visible
-    toy_obj.hide = True
+    toy_obj.hide_viewport = True
     toy_obj.hide_render = False
     
     ''' ========= misc settings ======== '''
-    
+
     bpy.context.scene.render.resolution_x = render_parameters['resolution']
     bpy.context.scene.render.resolution_y = render_parameters['resolution']
     scn.render.resolution_percentage = render_parameters['resolution_percentage']
-    scn.render.layers['RenderLayer'].samples = render_parameters['render_samples']
+    scn.cycles.samples = render_parameters['render_samples']
     scn.cycles.debug_use_spatial_splits = render_parameters['use_spatial_splits']
     scn.cycles.max_bounces = render_parameters['max_bounces']
     scn.cycles.min_bounces = render_parameters['min_bounces']
@@ -88,10 +106,10 @@ def generate():
     scn.cycles.caustics_reflective = render_parameters['use_caustics_reflective']
     scn.cycles.device = render_parameters['rendering_device']
     scn.render.image_settings.color_mode = render_parameters['color_mode']
-    scn.render.layers['RenderLayer'].cycles.use_denoising = render_parameters['use_denoising']
-    scn.render.layers['RenderLayer'].cycles.denoising_radius = render_parameters['denoising_radius']
+    scn.cycles.use_denoising = render_parameters['use_denoising']
+    scn.cycles.denoising_radius = render_parameters['denoising_radius']
     scn.cycles.film_transparent = render_parameters['use_film_transparent']
-    
+
     ''' ================================ '''
 
     '''paths''' 
@@ -99,11 +117,13 @@ def generate():
     tree = bpy.context.scene.node_tree
     image_output = tree.nodes['Image_Output']
     output_path = os.path.abspath('./pose_list_data/{}/'.format(toy_obj.name))
-    
+
     image_output.base_path = os.path.join(output_path)
 
     ''' ======== adding lamps and jittering them ======== '''
-    
+
+    """
+    ToDo:
     #hard coded location
     area_locations = light_parameters['area_light_locations']
     point_locations = light_parameters['point_light_locations']
@@ -141,10 +161,14 @@ def generate():
                                          strength = plus_minus(strength,percent=50), 
                                          temp = temp, 
                                          jitter_rotation = True)
+    """
+    # Global lighting:
+    lamps.make_global_lighting()
+
     
     ''' ================================================= '''
-   
-    for frame_idx, (azim, elev, tilt, scale) in enumerate(pose_list):            
+
+    for frame_idx, (azim, elev, tilt, scale) in enumerate(pose_list):
 
             scn.frame_set(frame_idx)
 
@@ -152,13 +176,12 @@ def generate():
             toy_obj.rotation_euler[1] = azim
             toy_obj.rotation_euler[2] = tilt
 
-            #scl = np.random.uniform(0.3,1.1)
-            
             toy_obj.scale = (scale, scale, scale)
 
-            bpy.context.scene.update()
+            bpy.context.view_layer.update()
 
             bpy.ops.render.render()
+
 
 if __name__ == "__main__":
     generate()
